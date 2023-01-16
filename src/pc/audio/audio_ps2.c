@@ -2,51 +2,15 @@
 
 #include <stdio.h>
 #include <kernel.h>
-#include <sifrpc.h>
-#include <iopheap.h>
-#include <loadfile.h>
+#include <ps2_audio_driver.h>
 
 #include "audsrv.h"
 
 #include "macros.h"
 #include "audio_api.h"
 
-extern unsigned int size_ps2_freesd_irx;
-extern unsigned char ps2_freesd_irx;
-
-extern unsigned int size_ps2_audsrv_irx;
-extern unsigned char ps2_audsrv_irx;
-
-static int spu2_init(void) {
-    int id, error;
-
-    // load freesd
-    id = SifExecModuleBuffer(&ps2_freesd_irx, size_ps2_freesd_irx, 0, NULL, &error);
-    if (id < 0 || error < 0) {
-        printf("audio_ps2: failed to load freesd: id %d error %d\n", id, error);
-        return -1;
-    }
-
-    printf("audio_ps2: load freesd id %d\n", id);
-
-    // load audsrv
-    id = SifExecModuleBuffer(&ps2_audsrv_irx, size_ps2_audsrv_irx, 0, NULL, &error);
-    if (id < 0 || error < 0) {
-        printf("audio_ps2: failed to load audsrv: id %d error %d\n", id, error);
-        return -1;
-    }
-
-    printf("audio_ps2: load audsrv id %d\n", id);
-
-    audsrv_init();
-
-    printf("audio_ps2: init audsrv\n");
-
-    return 0;
-}
-
 static bool audio_ps2_init(void) {
-    if (spu2_init()) return false;
+    if (init_audio_driver() != 0) return false;
 
     audsrv_fmt_t fmt;
 

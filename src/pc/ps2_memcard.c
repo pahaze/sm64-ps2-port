@@ -156,21 +156,10 @@ static inline bool memcard_check(void) {
 }
 
 bool ps2_memcard_init(void) {
-    int ret = SifLoadModule("rom0:SIO2MAN", 0, NULL);
-    if (ret < 0) {
-        printf("ps2_memcard: failed to load SIO2MAN: %d\n", ret);
-        return false;
-    }
-
-    ret = SifLoadModule("rom0:MCMAN", 0, NULL);
-    if (ret < 0) {
-        printf("ps2_memcard: failed to load MCMAN: %d\n", ret);
-        return false;
-    }
-
-    ret = SifLoadModule("rom0:MCSERV", 0, NULL);
-    if (ret < 0) {
-        printf("ps2_memcard: failed to load MCSERV: %d\n", ret);
+    int ret = -1;
+    ret = init_memcard_driver(true);
+    if(ret != 0) {
+        printf("ps2_memcard: failed to init memcard driver: %d\n", ret);
         return false;
     }
 

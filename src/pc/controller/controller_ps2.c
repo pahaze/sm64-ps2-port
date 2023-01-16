@@ -3,8 +3,7 @@
 
 #include <tamtypes.h>
 #include <kernel.h>
-#include <sifrpc.h>
-#include <loadfile.h>
+#include <ps2_joystick_driver.h>
 #include <libpad.h>
 
 #include "controller_api.h"
@@ -70,28 +69,28 @@ static int detect_pad(void) {
 }
 
 static void controller_ps2_init(void) {
-    if (SifLoadModule("rom0:SIO2MAN", 0, NULL) < 0) {
-        printf("controller_ps2: SIO2MAN failed to load\n");
+    int ret = -1;
+    
+    // MEMORY CARD already initied SIO2MAN
+    ret = init_joystick_driver(false);
+
+    if (ret != 0) {
+        printf("controller_ps2: failed to init joystick driver: %d\n", ret);
         return;
     }
-
-    if (SifLoadModule("rom0:PADMAN", 0, NULL) < 0) {
-        printf("controller_ps2: PADMAN failed to load\n");
-        return;
-    }
-
-    padInit(0);
 
     const int numports = padGetPortMax();
-
+    // Find the first device connected
     for (int port = 0; port < numports && joy_port < 0; ++port) {
-        const int maxslots = padGetSlotMax(port);
-        for (int slot = 0; slot < maxslots; ++slot) {
-            if (padPortOpen(port, slot, padbuf) >= 0) {
-                joy_port = port;
-                joy_slot = slot;
-                printf("controller_ps2: using pad (%d, %d)\n", port, slot);
-                break;
+        if (joy_port == -1 && joy_slot == -1 && mtapPortOpen(port)) {
+            const int maxslots = padGetSlotMax(port);
+            for (int slot = 0; slot < maxslots; ++slot) {
+                if (joy_port == -1 && joy_slot == -1 && padPortOpen(port, slot, padbuf) >= 0) {
+                    joy_port = port;
+                    joy_slot = slot;
+                    printf("controller_ps2: using pad (%d, %d)\n", port, slot);
+                    break;
+                }
             }
         }
     }

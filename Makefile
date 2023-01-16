@@ -480,13 +480,11 @@ ifeq ($(TARGET_WEB),1)
   PLATFORM_LDFLAGS := -lm -no-pie -s TOTAL_MEMORY=20MB -g4 --source-map-base http://localhost:8080/ -s "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain']"
 endif
 ifeq ($(TARGET_PS2),1)
-  AUDSRV_IRX := $(BUILD_DIR)/audsrv_irx
-  FREESD_IRX := $(BUILD_DIR)/freesd_irx
   PS2_ICON   := ps2/sm64.icn
-  C_FILES += $(AUDSRV_IRX).c $(FREESD_IRX).c $(BUILD_DIR)/ps2_icon.c
-  O_FILES += $(AUDSRV_IRX).o $(FREESD_IRX).o $(BUILD_DIR)/ps2_icon.o
-  PLATFORM_CFLAGS  := -DTARGET_PS2 -D_EE -G0 -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(GSKIT)/include
-  PLATFORM_LDFLAGS := -Wl,-zmax-page-size=128 -L$(GSKIT)/lib -lgskit -ldmakit -L$(PS2SDK)/ee/lib -laudsrv -lpad -lmc -ldma -lcdvd -lpatches
+  C_FILES += $(BUILD_DIR)/ps2_icon.c
+  O_FILES += $(BUILD_DIR)/ps2_icon.o
+  PLATFORM_CFLAGS  := -DTARGET_PS2 -D_EE -G0 -I$(PS2SDK)/ee/include -I$(PS2SDK)/common/include -I$(PS2SDK)/ports/include -I$(GSKIT)/include
+  PLATFORM_LDFLAGS := -Wl,-zmax-page-size=128 -T$(PS2SDK)/ee/startup/linkfile -L$(GSKIT)/lib -L$(PS2SDK)/ee/lib -L$(PS2SDK)/ports/lib -lgskit -ldmakit -lps2_drivers -lmc -lpatches
 endif
 
 PLATFORM_CFLAGS += -DNO_SEGMENTED_MEMORY
@@ -571,16 +569,8 @@ endif
 
 ifeq ($(TARGET_PS2),1)
 
-$(FREESD_IRX).c:
-	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/freesd.irx $@ ps2_freesd_irx
-
-$(AUDSRV_IRX).c:
-	$(PS2SDK)/bin/bin2c $(PS2SDK)/iop/irx/audsrv.irx $@ ps2_audsrv_irx
-
 $(BUILD_DIR)/ps2_icon.c: $(PS2_ICON)
 	$(PS2SDK)/bin/bin2c $^ $@ ps2_icon_data
-
-$(BUILD_DIR)/src/pc/audio/audio_ps2.o: $(AUDSRV_IRX).o $(FREESD_IRX).o
 
 endif
 
