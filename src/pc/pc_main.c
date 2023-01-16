@@ -38,7 +38,6 @@
 #ifdef TARGET_PS2
 # include <tamtypes.h>
 # include <kernel.h>
-# include <iopheap.h>
 # include <iopcontrol.h>
 # include <sifrpc.h>
 # include <loadfile.h>
