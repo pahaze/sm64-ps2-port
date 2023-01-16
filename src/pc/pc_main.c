@@ -38,7 +38,6 @@
 #ifdef TARGET_PS2
 # include <tamtypes.h>
 # include <kernel.h>
-# include <iopheap.h>
 # include <iopcontrol.h>
 # include <sifrpc.h>
 # include <loadfile.h>
@@ -140,6 +139,30 @@ static void on_anim_frame(double time) {
 }
 #endif
 
+#ifdef TARGET_PS2
+void reset_IOP() {
+    SifInitRpc(0);
+    while (!SifIopReset(NULL, 0)) {} // Comment this line if you want to "debug" through ps2link
+    while (!SifIopSync()) {} 
+}
+
+static void prepare_IOP() {
+    reset_IOP();
+    SifInitRpc(0);
+    sbv_patch_enable_lmb();
+    sbv_patch_disable_prefix_check();
+}
+
+static void init_drivers() {
+	init_ps2_filesystem_driver();
+    ps2_memcard_init();
+}
+
+static void deinit_drivers() {
+	deinit_ps2_filesystem_driver();
+}
+#endif
+
 static void save_config(void) {
     configfile_save(CONFIG_FILE);
 }
@@ -152,21 +175,8 @@ void main_func(void) {
     static u64 pool[0x165000/8 / 4 * sizeof(void *)];
 
 #ifdef TARGET_PS2
-    // reset IOP and the RPC service
-    SifInitRpc(0);
-    while (!SifIopReset("", 0)) { };
-    while (!SifIopSync()) { };
-    SifInitRpc(0);
-
-    // initialize SIF services
-    SifLoadFileInit();
-    SifInitIopHeap();
-
-    // enable patch to make SifExecModuleBuffer work with the official LOADFILE module
-    sbv_patch_enable_lmb();
-
-    // init memory cards
-    ps2_memcard_init();
+    prepare_IOP();
+    init_drivers();
 #endif
 
     main_pool_init(pool, pool + sizeof(pool) / sizeof(pool[0]));
@@ -246,6 +256,9 @@ void main_func(void) {
     while (1) {
         wm_api->main_loop(produce_one_frame);
     }
+#endif
+#ifdef TARGET_PS2
+    deinit_drivers();
 #endif
 }
 

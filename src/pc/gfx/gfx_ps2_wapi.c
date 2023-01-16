@@ -44,7 +44,7 @@ GSGLOBAL *gs_global;
 
 static int vsync_sema_1st_id;
 static int vsync_sema_2nd_id;
-static int vsync_sema_id = 0;
+static int vsync_sema_id = -1;
 
 static const struct VidMode *vid_mode;
 
@@ -99,8 +99,6 @@ static void prepare_sema() {
 }
 
 static void gfx_ps2_init(const char *game_name, bool start_in_fullscreen) {
-    prepare_sema();
-
     gs_global = gsKit_init_global();
 
     dmaKit_init(D_CTRL_RELE_OFF, D_CTRL_MFD_OFF, D_CTRL_STS_UNSPEC,
@@ -127,7 +125,6 @@ static void gfx_ps2_init(const char *game_name, bool start_in_fullscreen) {
 
     gsKit_init_screen(gs_global);
     gsKit_TexManager_init(gs_global);
-    gsKit_add_vsync_handler(vsync_handler);
 }
 
 static void gfx_ps2_set_fullscreen_changed_callback(void (*on_fullscreen_changed)(bool is_now_fullscreen)) {
@@ -160,6 +157,11 @@ static bool gfx_ps2_start_frame(void) {
 }
 
 static void gfx_ps2_swap_buffers_begin(void) {
+    if (vsync_sema_id != -1) return;
+
+    prepare_sema();
+    vsync_sema_id = 0;
+    gsKit_add_vsync_handler(vsync_handler);
 }
 
 static void gfx_ps2_swap_buffers_end(void) {
