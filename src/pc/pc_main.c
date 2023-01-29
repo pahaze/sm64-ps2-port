@@ -160,6 +160,7 @@ static void init_drivers() {
 
 static void deinit_drivers() {
 	deinit_ps2_filesystem_driver();
+	deinit_memcard_driver(true);
 }
 #endif
 
